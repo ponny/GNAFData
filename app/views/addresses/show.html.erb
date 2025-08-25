@@ -1,0 +1,168 @@
+<% content_for :title, "Address Details" %>
+
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-6">
+    <%= link_to addresses_path, class: "text-blue-600 hover:text-blue-800 flex items-center" do %>
+      ← Back to Search
+    <% end %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-lg p-8">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2"><%= @address.full_address %></h1>
+      <p class="text-gray-600">Address Details from GNAF Database</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Address Information -->
+      <div>
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Address Information</h2>
+        <div class="space-y-3">
+          <% if @address.number_first %>
+            <div class="flex justify-between py-2 border-b border-gray-100">
+              <span class="font-medium text-gray-700">Street Number:</span>
+              <span class="text-gray-900">
+                <%= @address.number_first %><%= @address.number_suffix %>
+                <% if @address.number_last && @address.number_last != @address.number_first %>
+                  - <%= @address.number_last %><%= @address.number_last_suffix %>
+                <% end %>
+              </span>
+            </div>
+          <% end %>
+
+          <div class="flex justify-between py-2 border-b border-gray-100">
+            <span class="font-medium text-gray-700">Street Name:</span>
+            <span class="text-gray-900"><%= @address.street_name %></span>
+          </div>
+
+          <% if @address.street_type %>
+            <div class="flex justify-between py-2 border-b border-gray-100">
+              <span class="font-medium text-gray-700">Street Type:</span>
+              <span class="text-gray-900"><%= @address.street_type.street_type_name %></span>
+            </div>
+          <% end %>
+
+          <% if @address.building_name %>
+            <div class="flex justify-between py-2 border-b border-gray-100">
+              <span class="font-medium text-gray-700">Building:</span>
+              <span class="text-gray-900"><%= @address.building_name %></span>
+            </div>
+          <% end %>
+
+          <% if @address.flat_number %>
+            <div class="flex justify-between py-2 border-b border-gray-100">
+              <span class="font-medium text-gray-700">Unit/Flat:</span>
+              <span class="text-gray-900">
+                <%= @address.flat_type %> <%= @address.flat_number_prefix %><%= @address.flat_number %><%= @address.flat_number_suffix %>
+              </span>
+            </div>
+          <% end %>
+
+          <% if @address.level_number %>
+            <div class="flex justify-between py-2 border-b border-gray-100">
+              <span class="font-medium text-gray-700">Level:</span>
+              <span class="text-gray-900">
+                <%= @address.level_type %> <%= @address.level_number_prefix %><%= @address.level_number %><%= @address.level_number_suffix %>
+              </span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Location Information -->
+      <div>
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Location Information</h2>
+        <div class="space-y-3">
+          <div class="flex justify-between py-2 border-b border-gray-100">
+            <span class="font-medium text-gray-700">Locality:</span>
+            <span class="text-gray-900"><%= @address.locality.locality_name %></span>
+          </div>
+
+          <div class="flex justify-between py-2 border-b border-gray-100">
+            <span class="font-medium text-gray-700">State:</span>
+            <span class="text-gray-900"><%= @address.locality.state.state_name %> (<%= @address.locality.state.state_abbreviation %>)</span>
+          </div>
+
+          <div class="flex justify-between py-2 border-b border-gray-100">
+            <span class="font-medium text-gray-700">Postcode:</span>
+            <span class="text-gray-900"><%= @address.locality.postcode %></span>
+          </div>
+
+          <% if @address.latitude && @address.longitude %>
+            <div class="flex justify-between py-2 border-b border-gray-100">
+              <span class="font-medium text-gray-700">Coordinates:</span>
+              <span class="text-gray-900"><%= @address.latitude %>, <%= @address.longitude %></span>
+            </div>
+          <% end %>
+
+          <% if @address.confidence %>
+            <div class="flex justify-between py-2 border-b border-gray-100">
+              <span class="font-medium text-gray-700">Geocode Confidence:</span>
+              <span class="text-gray-900"><%= @address.confidence %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Technical Information -->
+    <div class="mt-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">Technical Information</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <span class="font-medium text-gray-700">Address PID:</span>
+          <p class="text-gray-900 font-mono text-xs"><%= @address.address_detail_pid %></p>
+        </div>
+
+        <% if @address.street_locality_pid %>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <span class="font-medium text-gray-700">Street Locality PID:</span>
+            <p class="text-gray-900 font-mono text-xs"><%= @address.street_locality_pid %></p>
+          </div>
+        <% end %>
+
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <span class="font-medium text-gray-700">Locality PID:</span>
+          <p class="text-gray-900 font-mono text-xs"><%= @address.locality.locality_pid %></p>
+        </div>
+
+        <% if @address.date_created %>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <span class="font-medium text-gray-700">Date Created:</span>
+            <p class="text-gray-900"><%= @address.date_created.strftime("%d %B %Y") %></p>
+          </div>
+        <% end %>
+
+        <% if @address.date_last_modified %>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <span class="font-medium text-gray-700">Last Modified:</span>
+            <p class="text-gray-900"><%= @address.date_last_modified.strftime("%d %B %Y") %></p>
+          </div>
+        <% end %>
+
+        <% if @address.geocode_reliability_code %>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <span class="font-medium text-gray-700">Reliability Code:</span>
+            <p class="text-gray-900"><%= @address.geocode_reliability_code %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Map placeholder -->
+    <% if @address.latitude && @address.longitude %>
+      <div class="mt-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Location Map</h2>
+        <div class="bg-gray-100 rounded-lg p-8 text-center">
+          <p class="text-gray-600 mb-2">Map integration can be added here</p>
+          <p class="text-sm text-gray-500">Coordinates: <%= @address.latitude %>, <%= @address.longitude %></p>
+          <a href="https://www.google.com/maps?q=<%= @address.latitude %>,<%= @address.longitude %>" 
+             target="_blank" 
+             class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            View on Google Maps
+          </a>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,117 @@
+<% content_for :title, "GNAF Statistics" %>
+
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-6">
+    <%= link_to addresses_path, class: "text-blue-600 hover:text-blue-800 flex items-center" do %>
+      ← Back to Search
+    <% end %>
+  </div>
+
+  <div class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-900 mb-2">GNAF Database Statistics</h1>
+    <p class="text-gray-600">Overview of imported Australian address data</p>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center">
+        <div class="text-3xl text-blue-600 mr-4">🏠</div>
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">Total Addresses</h3>
+          <p class="text-2xl font-bold text-blue-600"><%= number_with_delimiter(@stats[:total_addresses]) %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center">
+        <div class="text-3xl text-green-600 mr-4">🏘️</div>
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">Localities</h3>
+          <p class="text-2xl font-bold text-green-600"><%= number_with_delimiter(@stats[:total_localities]) %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center">
+        <div class="text-3xl text-purple-600 mr-4">📍</div>
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">States</h3>
+          <p class="text-2xl font-bold text-purple-600"><%= number_with_delimiter(@stats[:total_states]) %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center">
+        <div class="text-3xl text-orange-600 mr-4">🛣️</div>
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">Street Types</h3>
+          <p class="text-2xl font-bold text-orange-600"><%= number_with_delimiter(@stats[:total_street_types]) %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Addresses by State -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">Addresses by State</h2>
+      <div class="space-y-3">
+        <% @stats[:addresses_by_state].each do |state, count| %>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <span class="font-medium text-gray-700"><%= state %></span>
+            <div class="flex items-center">
+              <div class="bg-blue-200 rounded-full h-2 mr-3" style="width: <%= (count.to_f / @stats[:addresses_by_state].first[1] * 100).round %>px; min-width: 20px;"></div>
+              <span class="text-gray-900 font-semibold"><%= number_with_delimiter(count) %></span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Top Postcodes -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">Top 10 Postcodes by Address Count</h2>
+      <div class="space-y-3">
+        <% @stats[:top_postcodes].each_with_index do |(postcode, count), index| %>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <div class="flex items-center">
+              <span class="bg-gray-100 text-gray-600 text-sm font-medium px-2 py-1 rounded mr-3"><%= index + 1 %></span>
+              <span class="font-medium text-gray-700"><%= postcode %></span>
+            </div>
+            <div class="flex items-center">
+              <div class="bg-green-200 rounded-full h-2 mr-3" style="width: <%= (count.to_f / @stats[:top_postcodes].first[1] * 100).round %>px; min-width: 20px;"></div>
+              <span class="text-gray-900 font-semibold"><%= number_with_delimiter(count) %></span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Additional Information -->
+  <div class="mt-8 bg-blue-50 rounded-lg p-6">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">About This Data</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
+      <div>
+        <h3 class="font-semibold mb-2">Data Source</h3>
+        <p>The Geocoded National Address File (G-NAF) is Australia's authoritative, geocoded address file containing physical address records from all states and territories.</p>
+      </div>
+      <div>
+        <h3 class="font-semibold mb-2">Coverage</h3>
+        <p>This database includes addresses from all Australian states and territories, with geocoding information where available.</p>
+      </div>
+      <div>
+        <h3 class="font-semibold mb-2">Updates</h3>
+        <p>G-NAF data is updated regularly by addressing authorities. Re-run the seed process to import the latest data.</p>
+      </div>
+      <div>
+        <h3 class="font-semibold mb-2">Usage</h3>
+        <p>Use the search functionality to find specific addresses, or browse by state and postcode filters.</p>
+      </div>
+    </div>
+  </div>
+</div>

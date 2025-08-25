@@ -1,28 +1,54 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Gnaf Data" %></title>
+    <title><%= content_for?(:title) ? yield(:title) + " - " : "" %>GNAF Data Viewer</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-
-    <%= yield :head %>
-
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
-
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
 
-  <body>
-    <%= yield %>
+  <body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+      <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+          <div class="flex items-center">
+            <h1 class="text-xl font-bold text-gray-900">
+              <%= link_to root_path, class: "text-gray-900 hover:text-blue-600" do %>
+                🏠 GNAF Data Viewer
+              <% end %>
+            </h1>
+          </div>
+          <div class="flex items-center space-x-4">
+            <%= link_to "Search", root_path, class: "text-gray-600 hover:text-gray-900" %>
+            <%= link_to "Statistics", stats_addresses_path, class: "text-gray-600 hover:text-gray-900" %>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <%= yield %>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-16">
+      <div class="container mx-auto px-4 py-8">
+        <div class="text-center text-gray-600 text-sm">
+          <p>GNAF Data Viewer - Australian Address Database</p>
+          <p class="mt-2">Data sourced from 
+            <a href="https://data.gov.au/data/dataset/geocoded-national-address-file-g-naf" 
+               target="_blank" 
+               class="text-blue-600 hover:text-blue-800">
+              data.gov.au
+            </a>
+          </p>
+        </div>
+      </div>
+    </footer>
   </body>
 </html>

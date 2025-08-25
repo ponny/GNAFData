@@ -1,0 +1,102 @@
+<% content_for :title, "GNAF Address Search" %>
+
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-900 mb-2">GNAF Address Search</h1>
+    <p class="text-gray-600">Search through Australia's Geocoded National Address File</p>
+  </div>
+
+  <!-- Search Form -->
+  <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <%= form_with url: addresses_path, method: :get, local: true, class: "space-y-4" do |form| %>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <%= form.text_field :search, placeholder: "Search addresses...", 
+                              value: params[:search], 
+                              class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+        </div>
+        <div>
+          <%= form.select :state, 
+                          options_for_select([
+                            ['All States', ''],
+                            ['NSW', 'NSW'], ['VIC', 'VIC'], ['QLD', 'QLD'], 
+                            ['WA', 'WA'], ['SA', 'SA'], ['TAS', 'TAS'], 
+                            ['NT', 'NT'], ['ACT', 'ACT']
+                          ], params[:state]),
+                          {}, 
+                          { class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" } %>
+        </div>
+        <div>
+          <%= form.text_field :postcode, placeholder: "Postcode", 
+                              value: params[:postcode], 
+                              class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+        </div>
+      </div>
+      <div class="flex justify-between items-center">
+        <%= form.submit "Search", class: "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors" %>
+        <%= link_to "View Statistics", stats_addresses_path, class: "text-blue-600 hover:text-blue-800" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Results Summary -->
+  <div class="mb-6">
+    <p class="text-gray-600">
+      <% if params[:search].present? || params[:state].present? || params[:postcode].present? %>
+        Showing <%= number_with_delimiter(@search_count) %> results
+        <span class="text-gray-400">(limited to 100 for performance)</span>
+      <% else %>
+        Total addresses in database: <%= number_with_delimiter(@total_count) %>
+        <span class="text-gray-400">(showing first 100)</span>
+      <% end %>
+    </p>
+  </div>
+
+  <!-- Results -->
+  <div class="space-y-4">
+    <% @addresses.each do |address| %>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">
+              <%= link_to address_path(address), class: "text-blue-600 hover:text-blue-800" do %>
+                <%= address.full_address %>
+              <% end %>
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div>
+                <strong>Locality:</strong> <%= address.locality.locality_name %>
+              </div>
+              <div>
+                <strong>State:</strong> <%= address.locality.state.state_name %>
+              </div>
+              <div>
+                <strong>Postcode:</strong> <%= address.locality.postcode %>
+              </div>
+            </div>
+            
+            <% if address.latitude && address.longitude %>
+              <div class="mt-2 text-sm text-gray-500">
+                <strong>Coordinates:</strong> <%= address.latitude %>, <%= address.longitude %>
+              </div>
+            <% end %>
+          </div>
+          
+          <div class="ml-4">
+            <%= link_to "View Details", address_path(address), 
+                        class: "bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors" %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @addresses.empty? %>
+    <div class="text-center py-12">
+      <div class="text-gray-400 text-6xl mb-4">🏠</div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">No addresses found</h3>
+      <p class="text-gray-600">Try adjusting your search criteria</p>
+    </div>
+  <% end %>
+</div>
