@@ -1,18 +1,36 @@
 class LocalitiesController < ApplicationController
   def index
+    # Use a subquery to get address counts
+    address_counts = Address.group(:locality_id).count
+    
     @localities = Locality.includes(:state)
-                          .joins("LEFT JOIN addresses ON addresses.locality_id = localities.id")
-                          .group("localities.id, states.state_name")
-                          .select("localities.*, states.state_name, COUNT(addresses.id) as address_count")
+                          .joins(:state)
                           .order("states.state_name, localities.locality_name")
+    
+    # Add address_count as a virtual attribute
+    @localities = @localities.map do |locality|
+      locality.define_singleton_method(:address_count) do
+        address_counts[self.id] || 0
+      end
+      locality.define_singleton_method(:state_name) do
+        self.state.state_name
+      end
+      locality
+    end
     
     @total_localities = @localities.length
     @total_addresses = Address.count
   end
 
+  def show
+    @locality = Locality.find(params[:id])
+    @addresses = @locality.addresses.order(:street_name, :number_first)
+    @address_list = @addresses.map(&:full_address).join("\n")
+  end
+
   def download_csv
     @locality = Locality.find(params[:id])
-    @addresses = @locality.addresses.includes(:locality, :street_type)
+    @addresses = @locality.addresses.includes(:locality)
     
     respond_to do |format|
       format.csv do
@@ -29,6 +47,7 @@ class LocalitiesController < ApplicationController
   def generate_csv(addresses)
     CSV.generate(headers: true) do |csv|
       csv << [
+        'Full Address',
         'Address Detail PID',
         'Number First',
         'Number Suffix',
@@ -50,13 +69,14 @@ class LocalitiesController < ApplicationController
       
       addresses.find_each do |address|
         csv << [
+          address.full_address,
           address.address_detail_pid,
           address.number_first,
           address.number_suffix,
           address.number_last,
           address.number_last_suffix,
           address.street_name,
-          address.street_type&.street_type_name,
+          address.street_type_name,
           address.level_type_code,
           address.level_number,
           address.flat_type_code,

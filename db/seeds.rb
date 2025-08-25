@@ -31,8 +31,8 @@ class GnafImporter
 
   def import_from_directory(base_dir)
     import_states_from_dir(base_dir)
-    import_street_types_from_dir(base_dir)
     import_localities_from_dir(base_dir)
+    import_locality_points_from_dir(base_dir)
     import_street_localities_from_dir(base_dir)
     import_geocodes_from_dir(base_dir)
     import_addresses_from_dir(base_dir)
@@ -59,23 +59,6 @@ class GnafImporter
     puts "✅ Imported #{@imported_counts[:states]} states"
   end
 
-  def import_street_types_from_dir(base_dir)
-    puts "🛣️  Importing street types..."
-    
-    street_type_files = Dir.glob("#{base_dir}/**/Authority_Code_STREET_TYPE_AUT_psv.psv")
-    
-    street_type_files.each do |file_path|
-      process_psv_file_direct(file_path) do |row|
-        StreetType.find_or_create_by(street_type_code: row['CODE']) do |street_type|
-          street_type.street_type_name = row['NAME']
-          street_type.street_type_description = row['DESCRIPTION']
-        end
-      end
-    end
-    
-    @imported_counts[:street_types] = StreetType.count
-    puts "✅ Imported #{@imported_counts[:street_types]} street types"
-  end
 
   def import_localities_from_dir(base_dir)
     puts "🏘️  Importing localities..."
@@ -96,9 +79,9 @@ class GnafImporter
           locality.locality_class_code = row['LOCALITY_CLASS_CODE']
           locality.locality_class_name = nil # Not available in this file
           locality.state = state
-          locality.postcode = row['PRIMARY_POSTCODE'].present? ? row['PRIMARY_POSTCODE'] : nil
-          locality.latitude = nil # Not in locality file
-          locality.longitude = nil # Not in locality file
+          locality.postcode = nil # Will be populated from addresses
+          locality.latitude = nil # Will be populated from locality points
+          locality.longitude = nil # Will be populated from locality points
           locality.date_created = parse_date(row['DATE_CREATED'])
           locality.date_retired = parse_date(row['DATE_RETIRED'])
         end
@@ -117,8 +100,46 @@ class GnafImporter
     puts "✅ Imported #{@imported_counts[:localities]} localities"
   end
 
+  def import_locality_points_from_dir(base_dir)
+    puts "📍 Importing locality coordinates..."
+    
+    locality_point_files = Dir.glob("#{base_dir}/**/*_LOCALITY_POINT_psv.psv")
+    puts "  Found #{locality_point_files.size} locality point files"
+    
+    updated_count = 0
+    
+    locality_point_files.each do |file_path|
+      puts "  Processing #{File.basename(file_path)}..."
+      processed = 0
+      
+      process_psv_file_direct(file_path) do |row|
+        locality = Locality.find_by(locality_pid: row['LOCALITY_PID'])
+        if locality
+          locality.update!(
+            latitude: row['LATITUDE'].present? ? row['LATITUDE'].to_f : nil,
+            longitude: row['LONGITUDE'].present? ? row['LONGITUDE'].to_f : nil
+          )
+          updated_count += 1
+        end
+        
+        processed += 1
+        if processed % 1000 == 0
+          print "#{processed/1000}k "
+          STDOUT.flush
+        end
+      end
+      
+      puts "✅ #{processed} locality points processed"
+    end
+    
+    puts "✅ Updated coordinates for #{updated_count} localities"
+  end
+
   def import_street_localities_from_dir(base_dir)
-    puts "🛣️  Importing street localities..."
+    puts "🛣️  Loading street localities..."
+    
+    # First load street type mappings
+    street_type_mappings = load_street_type_mappings(base_dir)
     
     street_locality_files = Dir.glob("#{base_dir}/**/*_STREET_LOCALITY_psv.psv")
     puts "  Found #{street_locality_files.size} street locality files"
@@ -129,9 +150,13 @@ class GnafImporter
       processed = 0
       
       process_psv_file_direct(file_path) do |row|
+        street_type_code = row['STREET_TYPE_CODE']
+        street_type_name = street_type_mappings[street_type_code] || street_type_code
+        
         @street_localities[row['STREET_LOCALITY_PID']] = {
           street_name: row['STREET_NAME'],
-          street_type_code: row['STREET_TYPE_CODE'],
+          street_type_code: street_type_code,
+          street_type_name: street_type_name,
           street_class_code: row['STREET_CLASS_CODE']
         }
         
@@ -146,6 +171,21 @@ class GnafImporter
     end
     
     puts "✅ Loaded #{@street_localities.size} street localities"
+  end
+
+  def load_street_type_mappings(base_dir)
+    puts "  Loading street type mappings..."
+    street_type_files = Dir.glob("#{base_dir}/**/Authority_Code_STREET_TYPE_AUT_psv.psv")
+    mappings = {}
+    
+    street_type_files.each do |file_path|
+      process_psv_file_direct(file_path) do |row|
+        mappings[row['CODE']] = row['NAME']
+      end
+    end
+    
+    puts "  ✅ Loaded #{mappings.size} street type mappings"
+    mappings
   end
 
   def import_geocodes_from_dir(base_dir)
@@ -169,13 +209,41 @@ class GnafImporter
     puts "✅ Loaded #{@geocodes.size} geocodes"
   end
 
+  def update_locality_postcodes_from_addresses
+    puts "📮 Updating locality postcodes from address data..."
+    
+    # Get the most common postcode for each locality from addresses
+    postcode_updates = Address.joins(:locality)
+                             .where.not(postcode: [nil, ''])
+                             .group('localities.id', :postcode)
+                             .select('localities.id as locality_id, postcode, COUNT(*) as count')
+                             .order('localities.id, COUNT(*) DESC')
+    
+    current_locality_id = nil
+    updated_count = 0
+    
+    postcode_updates.each do |result|
+      if current_locality_id != result.locality_id
+        # This is the most common postcode for this locality
+        locality = Locality.find(result.locality_id)
+        if locality.postcode.blank?
+          locality.update!(postcode: result.postcode)
+          updated_count += 1
+        end
+        current_locality_id = result.locality_id
+      end
+    end
+    
+    puts "✅ Updated postcodes for #{updated_count} localities"
+  end
+
   def import_addresses_from_dir(base_dir)
     puts "🏠 Importing addresses..."
     
     # Preload lookups for performance
     puts "Loading locality and street type lookups..."
     locality_lookup = Locality.pluck(:locality_pid, :id).to_h
-    street_type_lookup = StreetType.pluck(:street_type_code, :id).to_h
+    street_type_lookup = {}
     
     address_files = Dir.glob("#{base_dir}/**/*_ADDRESS_DETAIL_psv.psv")
     
@@ -194,7 +262,7 @@ class GnafImporter
         
         # Fast lookup from memory
         street_info = @street_localities[row['STREET_LOCALITY_PID']]
-        street_type_id = street_type_lookup[street_info&.dig(:street_type_code)] if street_info
+        street_type_name = street_info&.dig(:street_type_name)
         
         # Get geocode data
         geocode_info = @geocodes[row['ADDRESS_DETAIL_PID']]
@@ -203,7 +271,7 @@ class GnafImporter
           address_detail_pid: row['ADDRESS_DETAIL_PID'],
           street_locality_pid: row['STREET_LOCALITY_PID'],
           locality_id: locality_id,
-          street_type_id: street_type_id,
+          street_type_name: street_type_name,
           number_first: parse_integer(row['NUMBER_FIRST']),
           number_suffix: row['NUMBER_FIRST_SUFFIX'],
           number_last: parse_integer(row['NUMBER_LAST']),

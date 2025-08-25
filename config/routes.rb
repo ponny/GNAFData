@@ -18,7 +18,7 @@ Rails.application.routes.draw do
     end
   end
   
-  resources :localities, only: [:index] do
+  resources :localities, only: [:index, :show] do
     member do
       get :download_csv
     end

@@ -1,6 +1,5 @@
 class Address < ApplicationRecord
   belongs_to :locality
-  belongs_to :street_type, optional: true
   has_one :state, through: :locality
 
   validates :address_detail_pid, presence: true, uniqueness: true
@@ -17,7 +16,7 @@ class Address < ApplicationRecord
     parts << "#{number_first}#{number_suffix}" if number_first
     parts << "#{number_last}#{number_last_suffix}" if number_last && number_last != number_first
     parts << street_name
-    parts << street_type&.street_type_name
+    parts << street_type_name
     parts << locality.locality_name
     parts << locality.state.state_abbreviation
     parts << locality.postcode

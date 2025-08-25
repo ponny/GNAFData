@@ -51,7 +51,13 @@
                 <% end %>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900"><%= locality.locality_name %></div>
+                <div class="text-sm font-medium text-gray-900">
+                  <% if locality.address_count > 0 %>
+                    <%= link_to locality.locality_name, locality_path(locality), class: "text-blue-600 hover:text-blue-800 hover:underline" %>
+                  <% else %>
+                    <%= locality.locality_name %>
+                  <% end %>
+                </div>
                 <div class="text-sm text-gray-500"><%= locality.locality_class_code %></div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

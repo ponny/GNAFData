@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_24_070839) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_25_014355) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -18,7 +18,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_24_070839) do
     t.string "address_detail_pid", null: false
     t.string "street_locality_pid"
     t.integer "locality_id", null: false
-    t.integer "street_type_id"
     t.integer "number_first"
     t.string "number_suffix", limit: 15
     t.integer "number_last"
@@ -51,6 +50,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_24_070839) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "postcode"
+    t.string "street_type_name"
     t.index ["address_detail_pid"], name: "index_addresses_on_address_detail_pid", unique: true
     t.index ["building_name"], name: "index_addresses_on_building_name"
     t.index ["latitude", "longitude"], name: "index_addresses_on_latitude_and_longitude"
@@ -58,7 +58,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_24_070839) do
     t.index ["number_first"], name: "index_addresses_on_number_first"
     t.index ["postcode"], name: "index_addresses_on_postcode"
     t.index ["street_name"], name: "index_addresses_on_street_name"
-    t.index ["street_type_id"], name: "index_addresses_on_street_type_id"
+    t.index ["street_type_name"], name: "index_addresses_on_street_type_name"
   end
 
   create_table "localities", force: :cascade do |t|
@@ -93,16 +93,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_24_070839) do
     t.index ["state_pid"], name: "index_states_on_state_pid", unique: true
   end
 
-  create_table "street_types", force: :cascade do |t|
-    t.string "street_type_code", null: false
-    t.string "street_type_name", null: false
-    t.string "street_type_description"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["street_type_code"], name: "index_street_types_on_street_type_code", unique: true
-  end
-
   add_foreign_key "addresses", "localities"
-  add_foreign_key "addresses", "street_types"
   add_foreign_key "localities", "states"
 end

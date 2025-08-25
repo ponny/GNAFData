@@ -34,7 +34,10 @@
       </div>
       <div class="flex justify-between items-center">
         <%= form.submit "Search", class: "bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors" %>
-        <%= link_to "View Statistics", stats_addresses_path, class: "text-blue-600 hover:text-blue-800" %>
+        <div class="space-x-4">
+          <%= link_to "Browse Localities", localities_path, class: "bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors" %>
+          <%= link_to "View Statistics", stats_addresses_path, class: "text-blue-600 hover:text-blue-800" %>
+        </div>
       </div>
     <% end %>
   </div>
