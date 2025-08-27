@@ -35,10 +35,10 @@
             <span class="text-gray-900"><%= @address.street_name %></span>
           </div>
 
-          <% if @address.street_type %>
+          <% if @address.street_type_name %>
             <div class="flex justify-between py-2 border-b border-gray-100">
               <span class="font-medium text-gray-700">Street Type:</span>
-              <span class="text-gray-900"><%= @address.street_type.street_type_name %></span>
+              <span class="text-gray-900"><%= @address.street_type_name %></span>
             </div>
           <% end %>
 
@@ -85,7 +85,7 @@
 
           <div class="flex justify-between py-2 border-b border-gray-100">
             <span class="font-medium text-gray-700">Postcode:</span>
-            <span class="text-gray-900"><%= @address.locality.postcode %></span>
+            <span class="text-gray-900"><%= @address.postcode %></span>
           </div>
 
           <% if @address.latitude && @address.longitude %>
@@ -149,20 +149,70 @@
       </div>
     </div>
 
-    <!-- Map placeholder -->
+    <!-- Interactive Google Map -->
     <% if @address.latitude && @address.longitude %>
       <div class="mt-8">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Location Map</h2>
-        <div class="bg-gray-100 rounded-lg p-8 text-center">
-          <p class="text-gray-600 mb-2">Map integration can be added here</p>
-          <p class="text-sm text-gray-500">Coordinates: <%= @address.latitude %>, <%= @address.longitude %></p>
-          <a href="https://www.google.com/maps?q=<%= @address.latitude %>,<%= @address.longitude %>" 
-             target="_blank" 
-             class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-            View on Google Maps
-          </a>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div id="map" class="w-full h-96"></div>
+          <div class="p-4 bg-gray-50 flex justify-between items-center">
+            <div class="text-sm text-gray-600">
+              <strong>Coordinates:</strong> <%= @address.latitude %>, <%= @address.longitude %>
+            </div>
+            <a href="https://www.google.com/maps?q=<%= @address.latitude %>,<%= @address.longitude %>" 
+               target="_blank" 
+               class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+              Open in Google Maps
+            </a>
+          </div>
         </div>
       </div>
+
+      <script>
+        function initMap() {
+          const addressLocation = { lat: <%= @address.latitude %>, lng: <%= @address.longitude %> };
+          
+          const map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 16,
+            center: addressLocation,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+          });
+          
+          const marker = new google.maps.Marker({
+            position: addressLocation,
+            map: map,
+            title: "<%= j(@address.full_address) %>",
+            animation: google.maps.Animation.DROP
+          });
+          
+          const infoWindow = new google.maps.InfoWindow({
+            content: `
+              <div class="p-2">
+                <h3 class="font-semibold text-gray-900 mb-1"><%= j(@address.full_address) %></h3>
+                <p class="text-sm text-gray-600">
+                  <%= j(@address.locality.locality_name) %>, <%= j(@address.locality.state.state_abbreviation) %> <%= @address.postcode %>
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                  Coordinates: <%= @address.latitude %>, <%= @address.longitude %>
+                </p>
+              </div>
+            `
+          });
+          
+          marker.addListener("click", () => {
+            infoWindow.open(map, marker);
+          });
+          
+          // Open info window by default
+          infoWindow.open(map, marker);
+        }
+        
+        window.initMap = initMap;
+      </script>
+      
+      <script async defer 
+              src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+      </script>
     <% end %>
   </div>
 </div>

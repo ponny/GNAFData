@@ -1,6 +1,6 @@
 class AddressesController < ApplicationController
   def index
-    @addresses = Address.includes(:locality, :street_type, state: :localities)
+    @addresses = Address.includes(:locality, state: :localities)
     
     if params[:search].present?
       @addresses = @addresses.search(params[:search])
@@ -20,7 +20,7 @@ class AddressesController < ApplicationController
   end
 
   def show
-    @address = Address.includes(:locality, :street_type, state: :localities)
+    @address = Address.includes(:locality, state: :localities)
                     .find(params[:id])
   end
 
@@ -29,7 +29,7 @@ class AddressesController < ApplicationController
       total_addresses: Address.count,
       total_localities: Locality.count,
       total_states: State.count,
-      total_street_types: StreetType.count,
+      unique_street_types: Address.distinct.count(:street_type_name),
       addresses_by_state: Address.joins(locality: :state)
                                 .group('states.state_abbreviation')
                                 .count

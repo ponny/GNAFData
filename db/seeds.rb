@@ -188,6 +188,36 @@ class GnafImporter
     mappings
   end
 
+  def load_flat_type_mappings(base_dir)
+    puts "  Loading flat type mappings..."
+    flat_type_files = Dir.glob("#{base_dir}/**/Authority_Code_FLAT_TYPE_AUT_psv.psv")
+    mappings = {}
+    
+    flat_type_files.each do |file_path|
+      process_psv_file_direct(file_path) do |row|
+        mappings[row['CODE']] = row['NAME']
+      end
+    end
+    
+    puts "  ✅ Loaded #{mappings.size} flat type mappings"
+    mappings
+  end
+
+  def load_level_type_mappings(base_dir)
+    puts "  Loading level type mappings..."
+    level_type_files = Dir.glob("#{base_dir}/**/Authority_Code_LEVEL_TYPE_AUT_psv.psv")
+    mappings = {}
+    
+    level_type_files.each do |file_path|
+      process_psv_file_direct(file_path) do |row|
+        mappings[row['CODE']] = row['NAME']
+      end
+    end
+    
+    puts "  ✅ Loaded #{mappings.size} level type mappings"
+    mappings
+  end
+
   def import_geocodes_from_dir(base_dir)
     puts "🌍 Importing geocodes..."
     @geocodes = {}
@@ -241,9 +271,11 @@ class GnafImporter
     puts "🏠 Importing addresses..."
     
     # Preload lookups for performance
-    puts "Loading locality and street type lookups..."
+    puts "Loading locality and type lookups..."
     locality_lookup = Locality.pluck(:locality_pid, :id).to_h
     street_type_lookup = {}
+    flat_type_lookup = load_flat_type_mappings(base_dir)
+    level_type_lookup = load_level_type_mappings(base_dir)
     
     address_files = Dir.glob("#{base_dir}/**/*_ADDRESS_DETAIL_psv.psv")
     
@@ -280,12 +312,12 @@ class GnafImporter
           street_class_code: street_info&.dig(:street_class_code),
           street_class_type: nil,
           level_type_code: row['LEVEL_TYPE_CODE'],
-          level_type: nil,
+          level_type: level_type_lookup[row['LEVEL_TYPE_CODE']],
           level_number_prefix: row['LEVEL_NUMBER_PREFIX'],
           level_number: parse_integer(row['LEVEL_NUMBER']),
           level_number_suffix: row['LEVEL_NUMBER_SUFFIX'],
           flat_type_code: row['FLAT_TYPE_CODE'],
-          flat_type: nil,
+          flat_type: flat_type_lookup[row['FLAT_TYPE_CODE']],
           flat_number_prefix: row['FLAT_NUMBER_PREFIX'],
           flat_number: parse_integer(row['FLAT_NUMBER']),
           flat_number_suffix: row['FLAT_NUMBER_SUFFIX'],
