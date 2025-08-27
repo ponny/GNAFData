@@ -1,12 +1,24 @@
 # GNAF Data Viewer
 
-A vibe-coded pile of slop for importing and querying the Geocoded National Address File (G-NAF) data locally.
+A vibe-coded pile of slop for importing and querying the Geocoded National Address File (G-NAF) data locally. Despite being hastily assembled, it somehow successfully imports **16.7 million** Australian addresses.
 
-⚠️ **Warning**: This application is a hastily assembled collection of code that somehow works. Proceed with caution.
+## What This App Actually Does
+
+![Homepage](homepage.png)
+*Search through 16.7 million Australian addresses with coordinates and postcodes*
+
+![Localities Overview](localities.png)
+*Browse 17,576 Australian localities with address counts and CSV export*
+
+![Individual Locality](locality.png)
+*View all addresses in a locality with bulk selection and export*
+
+![Search Results](smith.png)
+*Find addresses by street name, locality, or postcode across all states*
 
 ## About G-NAF
 
-The Geocoded National Address File (G-NAF) is Australia's authoritative, geocoded address file. It contains over 13 million Australian physical address records. The data is sourced from each state and territory's addressing authorities and is updated regularly.
+The Geocoded National Address File (G-NAF) is Australia's authoritative, geocoded address file. It contains over 16 million Australian physical address records. The data is sourced from each state and territory's addressing authorities and is updated regularly.
 
 ## Data Source
 
@@ -20,7 +32,7 @@ The application expects the downloaded ZIP file to be available locally for seed
 
 * Ruby 3.4.4
 * Rails 8.0+
-* PostgreSQL 17 (SQLite gave up and went home)
+* PostgreSQL 17
 
 ### Installation
 
@@ -36,46 +48,18 @@ The application expects the downloaded ZIP file to be available locally for seed
    rails db:migrate
    ```
 
-4. Extract the G-NAF data ZIP file somewhere safe
-5. Seed the database with G-NAF data (grab a coffee, this takes hours):
+4. Download the G-NAF ZIP file (no need to extract manually)
+5. Seed the database with G-NAF data (optimized import, ~30-60 minutes):
    ```bash
-   GNAF_DATA_PATH=/path/to/extracted/gnaf/data rails db:seed
+   GNAF_ZIP_PATH=/path/to/g-naf_aug25_allstates_gda94_psv_1020.zip rails db:seed
    ```
-
-### Usage
-
-Start the Rails server:
-```bash
-rails server
-```
-
-Navigate to `http://localhost:3000/localities` to browse localities and download CSV files.
-
-## Known Issues & Quirks
-
-- QLD address import may mysteriously stall (we're investigating)
-- Code quality is questionable at best
-- Error handling is optimistic
-- Performance tuning was done by vibes only
-- Postcodes are derived from address data because GNAF locality files are incomplete
-- The import process uses "creative" PostgreSQL optimizations
-
-## Database Schema
-
-The application imports the following G-NAF data tables:
-- Addresses
-- Address Details
-- Localities
-- States
-- Street Types
-- And other related reference data
-
-## Development
-
-Run tests:
-```bash
-rails test
-```
+   
+   The import process automatically:
+   - Extracts ZIP to temporary directory for faster access
+   - Imports all states and territories
+   - Processes locality coordinates from LOCALITY_POINT files
+   - Derives postcodes from address data
+   - Uses batch inserts for optimal performance
 
 ## License
 
