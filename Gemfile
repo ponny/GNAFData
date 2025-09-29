@@ -18,7 +18,7 @@ gem "stimulus-rails"
 gem "jbuilder"
 
 # ZIP file processing for G-NAF data import
-gem "rubyzip", "~> 2.3"
+gem "rubyzip", "~> 3.1"
 gem "csv", "~> 3.2"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
