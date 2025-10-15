@@ -63,6 +63,8 @@ class LocalitiesController < ApplicationController
         'Locality Name',
         'State',
         'Postcode',
+        'Latitude',
+        'Longitude',
         'Confidence',
         'Date Created'
       ]
@@ -85,6 +87,8 @@ class LocalitiesController < ApplicationController
           address.locality.locality_name,
           address.locality.state.state_name,
           address.locality.postcode,
+          address.latitude,
+          address.longitude,
           address.confidence,
           address.date_created&.strftime('%Y-%m-%d')
         ]
